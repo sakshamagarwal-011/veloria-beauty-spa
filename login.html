@@ -1,0 +1,200 @@
+<!doctype html>
+<html lang="en">
+<head>
+  <meta charset="utf-8" />
+  <meta name="viewport" content="width=device-width,initial-scale=1" />
+  <title>Simple Login</title>
+  <style>
+    :root{
+      --bg:#f4f7fb;
+      --card:#ffffff;
+      --accent:#2563eb;
+      --muted:#6b7280;
+      --err:#ef4444;
+      --success:#10b981;
+      font-family: Inter, system-ui, -apple-system, 'Segoe UI', Roboto, 'Helvetica Neue', Arial;
+    }
+    *{box-sizing: border-box}
+    body{margin:0;min-height:100vh;display:flex;align-items:center;justify-content:center;background:linear-gradient(180deg,var(--bg),#eef3ff)}
+    .card{width:360px;background:var(--card);box-shadow:0 8px 30px rgba(20,30,60,0.08);border-radius:12px;padding:28px}
+    h1{margin:0 0 8px;font-size:20px;color:#0f172a}
+    p.lead{margin:0 0 18px;color:var(--muted);font-size:13px}
+
+    .form-group{margin-bottom:14px}
+    label{display:block;font-size:13px;margin-bottom:6px;color:#111827}
+    input[type="email"],input[type="password"]{width:100%;padding:10px 12px;border-radius:8px;border:1px solid #e6eef8;background:#fff;font-size:14px}
+    input:focus{outline:none;border-color:var(--accent);box-shadow:0 4px 12px rgba(37,99,235,0.08)}
+    .hint{font-size:12px;color:var(--muted);margin-top:6px}
+    .error{color:var(--err);font-size:12px;margin-top:6px}
+    .success{color:var(--success);font-size:12px;margin-top:6px}
+
+    .row{display:flex;gap:8px}
+    .btn{display:inline-block;padding:10px 12px;border-radius:8px;border:0;background:var(--accent);color:#fff;font-weight:600;cursor:pointer}
+    .btn:disabled{opacity:0.6;cursor:not-allowed}
+    .small{font-size:13px;color:var(--muted);margin-top:10px}
+
+    .field-valid{border-color:var(--success)}
+    .field-invalid{border-color:var(--err)}
+
+    .toggle-pass{background:transparent;border:0;color:var(--muted);cursor:pointer;font-size:13px}
+
+    .footer{margin-top:12px;text-align:center;font-size:12px;color:var(--muted)}
+
+    @media (max-width:420px){.card{width:92vw;padding:20px}}
+  </style>
+</head>
+<body>
+  <main class="card" role="main">
+    <h1>Welcome back</h1>
+    <p class="lead">Sign in with your Gmail or an educational ("*.edu") email.</p>
+
+    <form id="loginForm" novalidate>
+      <div class="form-group">
+        <label for="email">Email</label>
+        <input id="email" name="email" type="email" autocomplete="username" placeholder="you@gmail.com or you@college.edu" required>
+        <div id="emailError" class="error" aria-live="polite" style="display:none"></div>
+      </div>
+
+      <div class="form-group">
+        <label for="password">Password</label>
+        <div style="display:flex;align-items:center;gap:8px">
+          <input id="password" name="password" type="password" autocomplete="current-password" placeholder="At least 6 characters" required>
+          <button type="button" class="toggle-pass" id="togglePass">Show</button>
+        </div>
+        <div id="passError" class="error" aria-live="polite" style="display:none"></div>
+      </div>
+
+      <div style="display:flex;justify-content:space-between;align-items:center;margin-top:6px">
+        <label style="display:flex;align-items:center;gap:8px;font-size:13px;color:var(--muted)"><input type="checkbox" id="remember"> Remember</label>
+        <a href="#" style="font-size:13px;color:var(--accent);text-decoration:none">Forgot?</a>
+      </div>
+
+      <div style="margin-top:16px">
+        <button id="submitBtn" class="btn" type="submit">Sign in</button>
+      </div>
+
+      <div id="statusMsg" class="small" aria-live="polite"></div>
+    </form>
+
+    <div class="footer">Don't have an account? <a href="#">Sign up</a></div>
+  </main>
+
+  <script>
+    (function(){
+      const form = document.getElementById('loginForm');
+      const email = document.getElementById('email');
+      const password = document.getElementById('password');
+      const emailError = document.getElementById('emailError');
+      const passError = document.getElementById('passError');
+      const submitBtn = document.getElementById('submitBtn');
+      const statusMsg = document.getElementById('statusMsg');
+      const togglePass = document.getElementById('togglePass');
+
+      
+      const emailAllowedRegex = /^(?:[A-Za-z0-9._%+-]+@gmail\.com|[A-Za-z0-9._%+-]+@[A-Za-z0-9.-]+\.edu)$/i;
+
+      function validateEmail(){
+        const v = email.value.trim();
+        if(!v){
+          emailError.style.display = 'block';
+          emailError.textContent = 'Email is required.';
+          mark(email, false);
+          return false;
+        }
+        
+        const basic = /^[^@\s]+@[^@\s]+\.[^@\s]+$/;
+        if(!basic.test(v)){
+          emailError.style.display = 'block';
+          emailError.textContent = 'Please enter a valid email address.';
+          mark(email, false);
+          return false;
+        }
+        
+        if(!emailAllowedRegex.test(v)){
+          emailError.style.display = 'block';
+          emailError.innerHTML = 'Only Gmail addresses (example@gmail.com) or educational emails ending with <code>.edu</code> are allowed.';
+          mark(email, false);
+          return false;
+        }
+        emailError.style.display = 'none';
+        mark(email, true);
+        return true;
+      }
+
+      function validatePassword(){
+        const v = password.value;
+        if(!v){
+          passError.style.display = 'block';
+          passError.textContent = 'Password is required.';
+          mark(password, false);
+          return false;
+        }
+        if(v.length < 6){
+          passError.style.display = 'block';
+          passError.textContent = 'Password must be at least 6 characters.';
+          mark(password, false);
+          return false;
+        }
+        passError.style.display = 'none';
+        mark(password, true);
+        return true;
+      }
+
+      function mark(field, ok){
+        field.classList.remove('field-valid','field-invalid');
+        if(ok) field.classList.add('field-valid');
+        else field.classList.add('field-invalid');
+      }
+
+      
+      email.addEventListener('input', () => { statusMsg.textContent=''; validateEmail(); });
+      password.addEventListener('input', () => { statusMsg.textContent=''; validatePassword(); });
+
+      togglePass.addEventListener('click', () => {
+        if(password.type === 'password'){
+          password.type = 'text';
+          togglePass.textContent = 'Hide';
+        } else {
+          password.type = 'password';
+          togglePass.textContent = 'Show';
+        }
+      });
+
+      form.addEventListener('submit', function(e){
+        e.preventDefault();
+        const okEmail = validateEmail();
+        const okPass = validatePassword();
+        if(!(okEmail && okPass)){
+          statusMsg.style.color = '';
+          statusMsg.textContent = 'Please fix the errors above to continue.';
+          return;
+        }
+
+        
+        submitBtn.disabled = true;
+        submitBtn.textContent = 'Signing in...';
+        statusMsg.style.color = 'var(--muted)';
+        statusMsg.textContent = 'Checking credentials...';
+
+        
+        setTimeout(() => {
+          
+          submitBtn.disabled = false;
+          submitBtn.textContent = 'Sign in';
+          statusMsg.style.color = 'var(--success)';
+          statusMsg.textContent = 'Signed in successfully.';
+          window.location.href = 'index.html';
+        }, 900);
+      });
+
+      
+      email.addEventListener('focus', ()=>{
+        emailError.style.display = 'none';
+      });
+      password.addEventListener('focus', ()=>{
+        passError.style.display = 'none';
+      });
+    })();
+  </script>
+</body>
+</html>
